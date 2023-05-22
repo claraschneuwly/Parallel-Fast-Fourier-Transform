@@ -57,7 +57,8 @@ int main() {
 
     // Call algorithm
     cooley_tukey(x);
-
+    
+    // Print results
     std::cout << "FFT result: " << std::endl;
     for (int i = 0; i < 4; ++i) {
         std::cout << x[i] << std::endl;

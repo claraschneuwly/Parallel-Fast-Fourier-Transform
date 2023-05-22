@@ -48,7 +48,7 @@ int main() {
         std::cout << "Failed to open the file." << std::endl;
         return 1;
     }
-
+    // Put data in a CArray
     CArray numbers;
     std::string line;
     while (std::getline(inputFile, line)) {
@@ -58,6 +58,7 @@ int main() {
 
     inputFile.close();
 
+
     std::cout << "Input sequence first 6 numbers: " << std::endl;
     for (int i = 0; i < 6; ++i) {
         std::cout << numbers[i] << std::endl;
@@ -65,6 +66,21 @@ int main() {
     // Call algorithm
     cooley_tukey(numbers);
 
+    // Open output file
+    std::ofstream outputFile("output_weather_test.csv");
+    if (!outputFile.is_open()) {
+        std::cout << "Failed to open the file." << std::endl;
+        return 1;
+    }
+
+    // Write the output data to the CSV output file
+    for (const auto& n : numbers) {
+        outputFile << n << std::endl;
+    }
+
+    outputFile.close();
+
+    // Print output
     std::cout << "FFT first 6 result: " << std::endl;
     for (int i = 0; i < 6; ++i) {
         std::cout << numbers[i] << std::endl;

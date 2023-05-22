@@ -1,3 +1,5 @@
+// Standard Cooley-Tukey radix-2 algorithm
+
 #include <iostream>
 #include <complex>
 #include <vector>

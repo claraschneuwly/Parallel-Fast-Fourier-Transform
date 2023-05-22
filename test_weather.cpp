@@ -1,3 +1,5 @@
+// Test the Cooley-Tukey algorithm with historical CO2 data (weather_data_celan.csv) and write results to output_weather_test.csv
+
 #include <iostream>
 #include <complex>
 #include <vector>

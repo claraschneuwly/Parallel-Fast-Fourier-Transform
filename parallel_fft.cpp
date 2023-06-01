@@ -112,7 +112,7 @@ std::vector<double> parallel_fft_multiply(const std::vector<double>& res, const 
         } else {
             end = start + block_size;
         }
-        workers[t] = std::thread(parallel_multiply, std::ref(transformed_res), std::ref(transformed_coefficients), std::ref(multiplied_transform), start, end);
+        workers[t] = std::thread(&parallel_multiply, std::ref(transformed_res), std::ref(transformed_coefficients), std::ref(multiplied_transform), start, end);
     }
 
     // Wait for all threads to finish

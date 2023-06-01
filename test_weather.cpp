@@ -69,7 +69,7 @@ int main() {
     cooley_tukey(numbers);
 
     // Open output file
-    std::ofstream outputFile("output_weather_test.csv");
+    std::ofstream outputFile("test_data/output_weather_test.csv");
     if (!outputFile.is_open()) {
         std::cout << "Failed to open the file." << std::endl;
         return 1;

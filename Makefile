@@ -10,14 +10,14 @@ BUILD_DIR = build
 
 all: parallel simple
 
-parallel: $(BUILD_DIR)/parallel_fft
+parallel: $(BUILD_DIR)/parallel
 
-simple: $(BUILD_DIR)/fft_1
+simple: $(BUILD_DIR)/simple
 
-$(BUILD_DIR)/parallel_fft: $(addprefix $(BUILD_DIR)/,$(OBJECTS))
+$(BUILD_DIR)/parallel: $(addprefix $(BUILD_DIR)/,$(OBJECTS))
 	$(CXX) $(CFLAGS) -o $@ $(filter-out $(BUILD_DIR)/fft_1.o,$^)
 
-$(BUILD_DIR)/fft_1: $(BUILD_DIR)/fft_1.o
+$(BUILD_DIR)/simple: $(BUILD_DIR)/fft_1.o
 	$(CXX) $(CFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)

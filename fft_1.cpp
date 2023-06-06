@@ -33,7 +33,8 @@ void cooley_tukey(CArray& x) {
 
         // Combine the even and odd arrays
         for (size_t j = 0; j < N/2; ++j) {
-            Complex q = std::exp((-2 * M_PI * j) / N) * x_odd[j];
+            Complex w (cos(2*M_PI*j/N), sin(2*M_PI*j/N));
+            Complex q = w * x_odd[j];
             x[j] = x_even[j] + q;
             x[j + (N/2)] = x_even[j] - q;
         }

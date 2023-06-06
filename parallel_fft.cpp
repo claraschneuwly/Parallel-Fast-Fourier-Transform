@@ -97,7 +97,6 @@ std::vector<double> parallel_fft_multiply(const std::vector<double>& res, const 
 
     // Perform FFT on both signal and coefficients
     transformed_res = fft_parallel(transformed_res);
-    transformed_coefficients = fft_parallel(transformed_coefficients);
 
     int num_threads = std::thread::hardware_concurrency();
     std::vector<std::thread> workers(num_threads);
@@ -141,7 +140,7 @@ int main() {
             signal.push_back(temp1[i]);
     } 
     std::vector<double> coefficients; // Coefficient array
-    const double temp2[] = {1, 2, 1, 0};
+    const double temp2[] = {0, 0, 0, 0};
     for (size_t i = 0; i < 4; i += 1) {
             coefficients.push_back(temp2[i]);
     }

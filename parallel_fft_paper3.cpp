@@ -192,3 +192,32 @@ int main(){
     
     return 0;
 }
+
+
+// OUTPUT 
+/* 
+
+Time for fft is 9 microseconds
+
+FFT result: 
+(36,0)
+(-4,9.65685)
+(-4,4)
+(-4,1.65685)
+(-4,0)
+(-4,-1.65685)
+(-4,-4)
+(-4,-9.65685)
+
+Time for parallel fft is 143 microseconds
+
+Parallel FFT result: 
+(36,0)
+(-4,9.65685)
+(-4,4)
+(-4,1.65685)
+(-4,0)
+(-4,-1.65685)
+(-4,-4)
+
+*/ 

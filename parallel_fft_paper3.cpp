@@ -9,9 +9,11 @@
 
 typedef std::complex<double> Complex;
 
-void fft(Complex  *FFT_transformed, Complex  *x){
-    const size_t N = x.size();
-    // Trivial size-1 DFT base case
+void fft(Complex  *FFT_transformed, Complex  *x, int N){
+    // Recursive function for computing the FFT
+
+    //const size_t N = x.size();
+    // Trivial size-1 DFT base case: set FFT_transformed to x
     if (N == 1){
         for (int i = 0; i < N; i++){
             FFT_transformed[i] = x[i];
@@ -25,14 +27,18 @@ void fft(Complex  *FFT_transformed, Complex  *x){
     Complex evenTransformed[N/2];
     Complex oddTransformed[N/2];
 
-    for (size_t i = 0; i < N; i += 2) {
+    /*for (size_t i = 0; i < N; i += 2) {
         x_even.push_back(x[i]);
         x_odd.push_back(x[i+1]);
+    }*/
+    for (int i=0; i<N/2; i++){
+        x_even[i] = x[2*i];
+        x_odd[i] = x[2*i+1];
     }
 
     // Recursion
-    fft(evenTransformed, x_even);
-    fft(oddTransformed, x_odd);
+    fft(evenTransformed, x_even, N/2);
+    fft(oddTransformed, x_odd, N/2);
 
     // Combine the even and odd arrays
     for (int k = 0; k < N / 2; k++) {
@@ -40,15 +46,6 @@ void fft(Complex  *FFT_transformed, Complex  *x){
         FFT_transformed[k] = evenTransformed[k] + factor;
         FFT_transformed[k + N / 2] = evenTransformed[k] - factor;
     }
-}
-
-
-Complex bit_reversal(double x, int n) {
-    Complex res[n]; 
-    for (int i=0; i<n/2; i++) {
-            res[i] = x[n-i-1]; 
-    } 
-    return res; 
 }
 
 void fft_aux(int begin, int end, Complex*  FFT_transformed, Complex*  x){
@@ -139,7 +136,7 @@ void parallel_fft(Complex*  FFT_transformed, Complex* x, int N, int num_threads)
 
             for (int i = 0; i < m/2; i++){
                 Complex factor = std::polar(1.0, -2 * M_PI * i / N) * oddTransformed[i];
-                FFT_transformed[begin+i] = evenTransformed[i] + factor;
+                FFT_transformed[begin+i] = evenTransformed[i] + factor ;
                 FFT_transformed[begin+i + m/2] = evenTransformed[i] - factor;
             }
 
@@ -160,12 +157,10 @@ int main(){
 
     Complex FFT_transformed[N], x[N], pFFT_transformed[N];
 
-    for (int i = 0; i < N; i++){
+    for (int i=0; i<N; i++){
         x[i] = input[i];
     }
 
-    Complex FFT_transformed[N],pFFT_transformed[N];
-    
     auto start = std::chrono::steady_clock::now();
     fft(FFT_transformed, x, N);
     auto finish = std::chrono::steady_clock::now();
@@ -182,17 +177,16 @@ int main(){
     parallel_fft(pFFT_transformed, x, N, num_thread);
     finish = std::chrono::steady_clock::now();
     elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
-    std::cout << "Time for pfft is " << elapsed << " microseconds" << std::endl;
+    std::cout << "Time for parallel fft is " << elapsed << " microseconds" << std::endl;
 
     // Print results
-    std::cout << "pFFT result: " << std::endl;
+    std::cout << "Parallel FFT result: " << std::endl;
     for (int i = 0; i < 8; ++i) {
         std::cout << pFFT_transformed[i] << std::endl;
     }
     
     return 0;
 }
-
 
 // OUTPUT 
 /* 

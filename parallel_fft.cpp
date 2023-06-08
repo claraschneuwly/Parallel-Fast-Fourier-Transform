@@ -1,3 +1,5 @@
+// Implementation of a parallel radix-2 algorithm folloing Paper (4) : "High Performance Parallel Algorithm for 1-D FFT" by R.C. Agarwal
+
 #include <iostream>
 #include <complex>
 #include <thread>

@@ -137,12 +137,10 @@ void parallel_fft(Complex*  FFT_transformed, Complex* x, int N, int num_threads)
                 oddTransformed[i] = FFT_transformed[begin + i+ m/2];
             }
 
-            Complex  q;
-
             for (int i = 0; i < m/2; i++){
-                q = std::polar(1.0, -2 * M_PI * i / N);
-                FFT_transformed[begin+i] = evenTransformed[i] + q * oddTransformed[i];
-                FFT_transformed[begin+i + m/2] = evenTransformed[i] - q * oddTransformed[i];
+                Complex factor = std::polar(1.0, -2 * M_PI * i / N) * oddTransformed[i];
+                FFT_transformed[begin+i] = evenTransformed[i] + factor;
+                FFT_transformed[begin+i + m/2] = evenTransformed[i] - factor;
             }
 
             begin += m;

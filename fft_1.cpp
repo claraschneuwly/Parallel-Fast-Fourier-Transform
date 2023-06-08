@@ -7,10 +7,9 @@
 #include <cmath>
 
 typedef std::complex<double> Complex;
-typedef std::vector<Complex> CArray;
 
 // Compute the DFT of x
-void cooley_tukey(CArray& x) {
+void cooley_tukey(std::vector<Complex>& x) {
     const size_t N = x.size();
 
     // Trivial size-1 DFT base case
@@ -20,8 +19,8 @@ void cooley_tukey(CArray& x) {
     
     else {
         // Divide x into even and odd indices
-        CArray x_even;
-        CArray x_odd;
+        std::vector<Complex> x_even;
+        std::vector<Complex> x_odd;
         for (size_t i = 0; i < N; i += 2) {
             x_even.push_back(x[i]);
             x_odd.push_back(x[i+1]);
@@ -33,10 +32,9 @@ void cooley_tukey(CArray& x) {
 
         // Combine the even and odd arrays
         for (size_t j = 0; j < N/2; ++j) {
-            Complex w (cos(2*M_PI*j/N), sin(2*M_PI*j/N));
-            Complex q = w * x_odd[j];
-            x[j] = x_even[j] + q;
-            x[j + (N/2)] = x_even[j] - q;
+            Complex W (cos(2*M_PI*j/N), sin(2*M_PI*j/N));
+            x[j] = x_even[j] + W * x_odd[j];
+            x[j + (N/2)] = x_even[j] - W * x_odd[j];;
         }
     }
 }
@@ -44,7 +42,7 @@ void cooley_tukey(CArray& x) {
 // Test the algorithm
 int main() {
     // Test with values 1,2,3,4
-    CArray x; 
+    std::vector<Complex> x; 
     const Complex temp[] = {1.0,2.0,3.0,4.0};
     for (size_t i = 0; i < 4; i += 1) {
             x.push_back(temp[i]);

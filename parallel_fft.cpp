@@ -32,10 +32,9 @@ std::vector<Complex> fft_forward(const std::vector<Complex>& x) {
 
     // Combine the even and odd arrays
     for (int k = 0; k < N / 2; k++) {
-        Complex coeff (cos(2*M_PI*k/N), sin(2*M_PI*k/N));
-        Complex q = coeff * oddTransformed[k];
-        transformed[k] = evenTransformed[k] + q;
-        transformed[k + (N/2)] = evenTransformed[k] - q;
+        Complex W (cos(2*M_PI*k/N), sin(2*M_PI*k/N));
+        transformed[k] = evenTransformed[k] + W * oddTransformed[k];
+        transformed[k + (N/2)] = evenTransformed[k] - W * oddTransformed[k];
     }
 
     return transformed;

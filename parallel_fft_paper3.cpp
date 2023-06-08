@@ -156,12 +156,12 @@ int main(){
 
     int num_thread = 2;
 
-    Complex p0[8]{Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
+    Complex input[8]{Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
 
-    Complex FFT_transformed[N],x[N],pFFT_transformed[N];
+    Complex FFT_transformed[N], x[N], pFFT_transformed[N];
 
-    for (int i=0; i<N; i++){
-        x[i] = p0[i];
+    for (int i = 0; i < N; i++){
+        x[i] = input[i];
     }
 
     Complex FFT_transformed[N],pFFT_transformed[N];

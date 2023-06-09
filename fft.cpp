@@ -56,24 +56,25 @@ unsigned int bit_reversal(unsigned int n, int s){
 }
 
 
-void butterfly(std::vector<Complex>& x, int start, int num_blocks, int len) {
+void butterfly(std::vector<Complex> *x, int start, int num_blocks, int len) {
     double ang = 2 * M_PI / len;
     Complex wlen(cos(ang), sin(ang));
     for (int i = start; i < num_blocks; i += len) {
         Complex W(1);
         for (int j = 0; j < len / 2; j++) {
-            Complex u = x[i + j];
-            Complex v = x[i + j + len / 2] * W;
-            x[i + j] = u + v;
-            x[i + j + len / 2] = u - v;
+            Complex u = x->at(i + j);
+            Complex v = x->at(i + j + len / 2) * W;
+            x->at(i + j) = u + v;
+            x->at(i + j + len / 2) = u - v;
             W *= wlen;
         }
     }
 }
 
-void p_fft_iter(std::vector<Complex>& x, int num_threads) {
-    int N = x.size();
+void p_fft_iter(std::vector<Complex>* x, int original_num_threads) {
+    int N = x->size();
     int log2N = log2(N);
+    
 
     for (int i = 1, j = 0; i < N; i++) {
         int bit = N >> 1;
@@ -86,8 +87,13 @@ void p_fft_iter(std::vector<Complex>& x, int num_threads) {
     }
 
     for (int len = 2; len <= N; len <<= 1) {
+        int num_threads = original_num_threads;
         // Execute each level of butterfly operations in parallel
+
         int num_blocks = N / len;
+        if (num_threads > num_blocks) //if more threads than blocks
+            num_threads = num_blocks;
+
         int blocks_per_thread = num_blocks / num_threads;
         int threads_with_extra_blocks = num_blocks - blocks_per_thread * num_threads;
         std::vector<std::thread> workers(num_threads - 1);
@@ -98,6 +104,7 @@ void p_fft_iter(std::vector<Complex>& x, int num_threads) {
             if (threads_with_extra_blocks > 0){
                 workers[i] = std::thread(&butterfly, x, start, blocks_per_thread + 1, len);
                 start = start + (blocks_per_thread + 1) * len; 
+                threads_with_extra_blocks--;
             }
             workers[i] = std::thread(&butterfly, x, start, blocks_per_thread, len);
         }
@@ -298,15 +305,18 @@ int main() {
     // Complex input[2] = {Complex(1,0), Complex(2,0)};
     Complex input[8] = {Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
 
-    std::vector<Complex> FFT_transformed(N), x(N), pFFT_transformed(N);
+    std::vector<Complex> FFT_transformed(N), pFFT_transformed(N);
+    
+    std::vector<Complex> *x = new std::vector<Complex>(N);
     // Complex FFT_transformed[N], x[N], pFFT_transformed[N];
 
     for (int i=0; i<N; i++){
-        x[i] = input[i];
+        x->at(i) = input[i];
     }
 
     auto start = std::chrono::steady_clock::now();
-    p_fft_iter(x, 4);
+    p_fft_iter(x, num_thread);
+    std::cout << "p_fft_iter done" << std::endl;
     auto finish = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << "Time for fft is " << elapsed << " microseconds" << std::endl;
@@ -314,7 +324,7 @@ int main() {
     // Print results
     std::cout << "FFT result: " << std::endl;
     for (int i = 0; i < 8; ++i) {
-        std::cout << FFT_transformed[i] << std::endl;
+        std::cout << x->at(i) << std::endl;
     }
 
     // start = std::chrono::steady_clock::now();

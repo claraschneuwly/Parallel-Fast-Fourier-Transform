@@ -25,8 +25,6 @@ int main(){
     complex <double> res[2 * n];
     poly_mult(res, poly1, poly2, 4);
     for (int i = 0; i < 2 * n; i ++) {
-        cout << res[i];
+        std::cout << res[i] << std::endl;
     }
-    cout << endl;
-
 }

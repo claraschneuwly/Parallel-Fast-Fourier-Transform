@@ -32,7 +32,7 @@ $(BUILD_DIR)/parallel4: $(BUILD_DIR)/parallel_fft_paper4.o
 $(BUILD_DIR)/simple: $(BUILD_DIR)/fft_1.o
 	$(CXX) $(CFLAGS) -o $@ $^
 
-$(BUILD_DIR)/%.o: %.cpp fft.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.cpp fft.cpp | $(BUILD_DIR)
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR):

@@ -6,7 +6,7 @@
 #include <thread>
 #include <fstream>
 
-#define TEST 0
+#define TEST 1
 
 typedef std::complex<double> Complex;
 
@@ -97,26 +97,28 @@ void p_fft_iter(std::vector<Complex>& x, int original_num_threads) {
         if (num_threads > num_blocks) //if more threads than blocks
             num_threads = num_blocks;
 
-        int blocks_per_thread = num_blocks / N ;
+        int blocks_per_thread = num_blocks / num_threads ;
         int threads_with_extra_blocks = num_blocks - blocks_per_thread * num_threads;
         std::vector<std::thread> workers(num_threads - 1);
 
         int start = 0;
         //launch threads at each iteration level
+        // std::cout << "LEN : " << len << " THREADS PER BLOCK: " << blocks_per_thread << std::endl;
+        // std::cout << "NUM_THREADS: " << num_threads << std::endl;
         for (int i = 0; i < num_threads-1; i++){
-            std::cout << "start: " << start << std::endl;
             if (threads_with_extra_blocks > 0){
+                // std::cout << "EXTRA BLOCKS " << i << std::endl;
                 workers[i] = std::thread(&butterfly, std::ref(x), start, blocks_per_thread + 1, len);
                 start = start + (blocks_per_thread + 1) * len; 
                 threads_with_extra_blocks--;
             }
             else{
-                std::cout << "BLOCKS " << blocks_per_thread << " " << len << std::endl;
+                // std::cout << "BLOCKS " << blocks_per_thread << " " << len << std::endl;
                 workers[i] = std::thread(&butterfly, std::ref(x), start, blocks_per_thread, len);
                 start = start + blocks_per_thread*len;
             }
         }
-        std::cout << "start : " << start << std::endl;
+        // std::cout << "start : " << start << std::endl;
         if (threads_with_extra_blocks > 0)
             butterfly(x, start, blocks_per_thread+1, len);
         else   
@@ -127,7 +129,10 @@ void p_fft_iter(std::vector<Complex>& x, int original_num_threads) {
         for (int i = 0; i < num_threads - 1; i++){
             workers[i].join();
         }
-        std::cout << x[0] << std::endl;
+        
+        // for (int i = 0; i < N; i++){
+        //     std::cout << x[i] << std::endl;
+        // }
     }
 }
 
@@ -160,7 +165,10 @@ void fft_iter(std::vector<Complex> &x){
                 W *= wlen;
             }
         }
-        std::cout << x[0] << std::endl;
+
+        // for (int i = 0; i < N; i++){
+        //     std::cout << x[i] << std::endl;
+        // }
     }
 }
 
@@ -327,7 +335,7 @@ int main() {
 
     int N = 8;
 
-    int num_thread = 4;
+    int num_thread = 8;
 
     // Complex input[2] = {Complex(1,0), Complex(2,0)};
     Complex input[8] = {Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
@@ -343,7 +351,7 @@ int main() {
 
     auto start = std::chrono::steady_clock::now();
     p_fft_iter(x, num_thread);
-    // fft_iter(*x);
+    // fft_iter(x);
     std::cout << "p_fft_iter done" << std::endl;
     auto finish = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
@@ -391,6 +399,7 @@ int main() {
     std::vector<Complex> weather_data, FFT_transformed;
 
     int num_frequencies = 100;
+    int num_threads = 8;
 
     std::string line;
 
@@ -411,16 +420,22 @@ int main() {
 
     // Compute FFT of weather - sequential (iterative)
     auto start = std::chrono::steady_clock::now();
-    fft_iter(weather_data);
+    // fft_iter(weather_data);
+    p_fft_iter(weather_data, num_threads);
     if (weather_data.size() > num_frequencies) { // iterative
         std::fill(weather_data.begin() + num_frequencies, weather_data.end() + 1, 0); 
     }
-    std::cout << weather_data.size() << std::endl;
-
-    // inverse_fft(FFT_inverse, weather_data, false); //sequential
     auto finish = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << "Time for fft is " << elapsed << " microseconds" << std::endl;
+
+
+    // std::cout << weather_data.size() << std::endl;
+
+    // inverse_fft(FFT_inverse, weather_data, false); //sequential
+    // auto finish = std::chrono::steady_clock::now();
+    // auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    // std::cout << "Time for fft is " << elapsed << " microseconds" << std::endl;
 
 
     // fft_rec(FFT_transformed, weather_data, weather_data.size());

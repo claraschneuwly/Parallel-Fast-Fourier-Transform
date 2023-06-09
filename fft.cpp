@@ -45,16 +45,6 @@ void fft_rec(std::vector<Complex> &FFT_transformed, std::vector<Complex> &x, int
     }
 }
 
-unsigned int bit_reversal(unsigned int n, int s){
-    unsigned int res = 0;
-    for (int i = 0; i < s; i++){
-        res <<= 1;
-        res |= (n & 1);
-        n >>= 1;
-    }
-    return res;
-}
-
 
 void butterfly(std::vector<Complex> &x, int start, int num_blocks, int len) {
     int N = x.size();
@@ -141,7 +131,7 @@ void fft_iter(std::vector<Complex> &x){
     int N = x.size();
     int log2N = log2(N);
     
-    for (int i = 1, j = 0; i < N; i++) { //NOTE: change this code if possible 
+    for (int i = 1, j = 0; i < N; i++) { 
         int bit = N >> 1;
         for (; j & bit; bit >>= 1)
             j ^= bit;
@@ -172,22 +162,6 @@ void fft_iter(std::vector<Complex> &x){
     }
 }
 
-void fft_iter_aux(int begin, int end, std::vector<Complex> &FFT_transformed, std::vector<Complex> &x, int len){
-    // Aux function for parallel FFT computation
-    size_t chunk_size = end - begin;
-    std::vector<Complex> x_res(chunk_size), fft_transformed_res(chunk_size);
-    // Complex x_res[chunk_size], fft_transformed_res[chunk_size];
-
-    for (size_t i = 0; i < chunk_size; i++){
-        x_res[i] = x[i + begin];
-    }
-
-    fft_rec(fft_transformed_res, x_res, chunk_size);
-
-    for (int i = 0; i < chunk_size; i++){
-        FFT_transformed[i + begin] = fft_transformed_res[i];
-    }
-}
 
 void p_ifft(std::vector<Complex> &FFT_inverse, std::vector<Complex>& x, int num_threads){
     int N = x.size();
@@ -222,120 +196,14 @@ void inverse_fft(std::vector<Complex> &FFT_inverse, std::vector<Complex>& x, boo
     }
 }
 
-void fft_aux(int begin, int end, std::vector<Complex> &FFT_transformed, std::vector<Complex> &x){
-    // Aux function for parallel FFT computation
-    size_t chunk_size = end - begin;
-    std::vector<Complex> x_res(chunk_size), fft_transformed_res(chunk_size);
-    // Complex x_res[chunk_size], fft_transformed_res[chunk_size];
-
-    for (size_t i = 0; i < chunk_size; i++){
-        x_res[i] = x[i + begin];
-    }
-
-    fft_rec(fft_transformed_res, x_res, chunk_size);
-
-    for (int i = 0; i < chunk_size; i++){
-        FFT_transformed[i + begin] = fft_transformed_res[i];
-    }
-}
-
-
-void order_fft(std::vector<Complex> & FFT_ordered, std::vector<Complex> &x, int N, int num_threads){
-    // Recursive function to order the input vector x in an ascending order for parallel FFT
-
-    // Base case: if size is 1, set FFT_ordered to x
-    if (num_threads == 1){
-        for (int i = 0; i < N; i++){
-            FFT_ordered[i] = x[i];
-        }
-        return;
-    }
-
-    // Divide x into even and odd indices
-    std::vector<Complex> x_even(N/2), x_odd(N/2), evenOrdered(N/2), oddOrdered(N/2);
-    // Complex x_even[N/2];
-    // Complex x_odd[N/2];
-    // Complex evenOrdered[N/2];
-    // Complex oddOrdered[N/2];
-
-    for (int i=0; i<N/2; i++){
-        x_even[i] = x[2*i];
-        x_odd[i] = x[2*i+1];
-    }
-
-    // Recursively order x_even and x_odd
-    order_fft(evenOrdered, x_even, N/2, num_threads/2);
-    order_fft(oddOrdered, x_odd, N/2, num_threads/2);
-
-    // Combine the even and odd arrays
-    for (int k = 0; k < N/2; k++){
-        FFT_ordered[k] = evenOrdered[k];
-        FFT_ordered[k + N / 2] = oddOrdered[k];
-    }
-}
-
-void parallel_fft(std::vector<Complex> &FFT_transformed, std::vector<Complex> &x, int N, int num_threads){
-    int log2N = log2(N);
-    
-
-    // Order the input array x using order_fft function.
-    std::vector<Complex> FFT_ordered(N);
-    order_fft(FFT_ordered, x, N, num_threads);
-
-    // Create threads to compute FFT in parallel
-    int block_size = N / num_threads;
-    std::vector<std::thread> workers(num_threads - 1);
-
-    int start_block = 0;
-
-    for (int i = 0; i < num_threads-1; i++){
-        int end_block = start_block + block_size;
-        workers[i] = std::thread(&fft_aux, start_block, end_block, std::ref(FFT_transformed), std::ref(FFT_ordered));
-        start_block = end_block;
-    }
-    fft_aux(start_block, start_block + block_size, FFT_transformed, FFT_ordered);
-
-    for (int i = 0; i < num_threads-1; i++){
-        workers[i].join();
-    }
-
-    // join threads
-
-
-    int m = N / num_threads * 2; //NOTE: could be improved
-    for (int t = 0; t < log2(num_threads); t++){
-        int begin = 0;
-        int end = m;
-        while (end <= N){
-            std::vector<Complex> evenTransformed(m/2), oddTransformed(m/2);
-            // Complex  evenTransformed[m/2], oddTransformed[m/2];
-            for (int i = 0; i < m/2; i++){
-                evenTransformed[i] = FFT_transformed[begin + i];
-                oddTransformed[i] = FFT_transformed[begin + i+ m/2];
-            }
-
-            for (int i = 0; i < m/2; i++){
-                Complex factor = std::polar(1.0, -2 * M_PI * i / N) * oddTransformed[i];
-                FFT_transformed[begin+i] = evenTransformed[i] + factor ;
-                FFT_transformed[begin+i + m/2] = evenTransformed[i] - factor;
-            }
-
-            begin += m;
-            end += m;
-        }
-        m *= 2;
-    }
-}
-
-
 
 // Test the algorithm
 int main() {
     #if TEST == 0 //implement custom code 
 
-    int N = 1 << 23;
+    int N = 1 << 24;
 
-    int num_thread = 16;
+    int num_thread = 2;
 
 
     // Complex input[2] = {Complex(1,0), Complex(2,0)};
@@ -350,7 +218,7 @@ int main() {
     }
 
     auto start = std::chrono::steady_clock::now();
-    p_fft_iter(x, num_thread);
+    p_fft_iter(x, 4);
     // fft_iter(x);
     std::cout << "p_fft_iter done" << std::endl;
     auto finish = std::chrono::steady_clock::now();

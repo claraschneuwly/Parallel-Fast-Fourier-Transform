@@ -8,7 +8,9 @@
 #include <fstream>
 
 
-void mult_poly_bis()
+void mult_poly_bis(){
+}; 
+
 
 void multi_poly(complex<double>* res, complex<double>* p1, complex<double>* p2, int n){
     complex<double> poly1[2 * n]

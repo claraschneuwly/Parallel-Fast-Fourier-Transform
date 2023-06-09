@@ -56,25 +56,25 @@ unsigned int bit_reversal(unsigned int n, int s){
 }
 
 
-void butterfly(std::vector<Complex> *x, int start, int num_blocks, int len) {
+void butterfly(std::vector<Complex> &x, int start, int num_blocks, int len) {
+    int N = x.size();
     double ang = 2 * M_PI / len;
     Complex wlen(cos(ang), sin(ang));
     for (int i = start; i < num_blocks; i += len) {
         Complex W(1);
-        for (int j = 0; j < len / 2; j++) {
-            Complex u = x->at(i + j);
-            Complex v = x->at(i + j + len / 2) * W;
-            x->at(i + j) = u + v;
-            x->at(i + j + len / 2) = u - v;
+        for (int j = 0; j < len / 2 && i + j + len/2 < N; j++) {
+            Complex u = x[i + j];
+            Complex v = x[i + j + len / 2] * W;
+            x[i + j] = u + v;
+            x[i + j + len / 2] = u - v;
             W *= wlen;
         }
     }
 }
 
-void p_fft_iter(std::vector<Complex>* x, int original_num_threads) {
-    int N = x->size();
+void p_fft_iter(std::vector<Complex>& x, int original_num_threads) {
+    int N = x.size();
     int log2N = log2(N);
-    
 
     for (int i = 1, j = 0; i < N; i++) {
         int bit = N >> 1;
@@ -91,29 +91,43 @@ void p_fft_iter(std::vector<Complex>* x, int original_num_threads) {
         // Execute each level of butterfly operations in parallel
 
         int num_blocks = N / len;
+        if (N % len != 0)
+            ++num_blocks;
+
         if (num_threads > num_blocks) //if more threads than blocks
             num_threads = num_blocks;
 
-        int blocks_per_thread = num_blocks / num_threads;
+        int blocks_per_thread = num_blocks / N ;
         int threads_with_extra_blocks = num_blocks - blocks_per_thread * num_threads;
         std::vector<std::thread> workers(num_threads - 1);
 
         int start = 0;
         //launch threads at each iteration level
         for (int i = 0; i < num_threads-1; i++){
+            std::cout << "start: " << start << std::endl;
             if (threads_with_extra_blocks > 0){
-                workers[i] = std::thread(&butterfly, x, start, blocks_per_thread + 1, len);
+                workers[i] = std::thread(&butterfly, std::ref(x), start, blocks_per_thread + 1, len);
                 start = start + (blocks_per_thread + 1) * len; 
                 threads_with_extra_blocks--;
             }
-            workers[i] = std::thread(&butterfly, x, start, blocks_per_thread, len);
+            else{
+                std::cout << "BLOCKS " << blocks_per_thread << " " << len << std::endl;
+                workers[i] = std::thread(&butterfly, std::ref(x), start, blocks_per_thread, len);
+                start = start + blocks_per_thread*len;
+            }
         }
-        butterfly(x, start, blocks_per_thread, len);
+        std::cout << "start : " << start << std::endl;
+        if (threads_with_extra_blocks > 0)
+            butterfly(x, start, blocks_per_thread+1, len);
+        else   
+            butterfly(x, start, blocks_per_thread, len);
+
 
         //join threads
         for (int i = 0; i < num_threads - 1; i++){
             workers[i].join();
         }
+        std::cout << x[0] << std::endl;
     }
 }
 
@@ -146,6 +160,7 @@ void fft_iter(std::vector<Complex> &x){
                 W *= wlen;
             }
         }
+        std::cout << x[0] << std::endl;
     }
 }
 
@@ -163,6 +178,18 @@ void fft_iter_aux(int begin, int end, std::vector<Complex> &FFT_transformed, std
 
     for (int i = 0; i < chunk_size; i++){
         FFT_transformed[i + begin] = fft_transformed_res[i];
+    }
+}
+
+void p_ifft(std::vector<Complex> &FFT_inverse, std::vector<Complex>& x, int num_threads){
+    int N = x.size();
+
+    for (auto &val : x) {val = std::conj(val);}
+
+    p_fft_iter(x, num_threads);
+
+    for (size_t i = 0; i < N; i++) {
+        FFT_inverse[i] = std::conj(x[i])/(Complex)N;
     }
 }
 
@@ -300,22 +327,23 @@ int main() {
 
     int N = 8;
 
-    int num_thread = 2;
+    int num_thread = 4;
 
     // Complex input[2] = {Complex(1,0), Complex(2,0)};
     Complex input[8] = {Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
 
     std::vector<Complex> FFT_transformed(N), pFFT_transformed(N);
     
-    std::vector<Complex> *x = new std::vector<Complex>(N);
+    std::vector<Complex> x(N);
     // Complex FFT_transformed[N], x[N], pFFT_transformed[N];
 
     for (int i=0; i<N; i++){
-        x->at(i) = input[i];
+        x[i] = input[i];
     }
 
     auto start = std::chrono::steady_clock::now();
     p_fft_iter(x, num_thread);
+    // fft_iter(*x);
     std::cout << "p_fft_iter done" << std::endl;
     auto finish = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
@@ -324,7 +352,7 @@ int main() {
     // Print results
     std::cout << "FFT result: " << std::endl;
     for (int i = 0; i < 8; ++i) {
-        std::cout << x->at(i) << std::endl;
+        std::cout << x[i] << std::endl;
     }
 
     // start = std::chrono::steady_clock::now();
@@ -352,7 +380,7 @@ int main() {
 
 
     #elif TEST == 1 // Test on weather data
-    std::cout << 8/3 << std::endl;
+    // std::cout << 8/3 << std::endl;
     // Open historical weather data
     std::ifstream inputFile("test_data/weather_data_clean.csv");
     if (!inputFile.is_open()) {
@@ -389,7 +417,7 @@ int main() {
     }
     std::cout << weather_data.size() << std::endl;
 
-    inverse_fft(FFT_inverse, weather_data, false);
+    // inverse_fft(FFT_inverse, weather_data, false); //sequential
     auto finish = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
     std::cout << "Time for fft is " << elapsed << " microseconds" << std::endl;

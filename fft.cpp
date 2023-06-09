@@ -6,7 +6,7 @@
 #include <thread>
 #include <fstream>
 
-#define TEST 1
+#define TEST 0
 
 typedef std::complex<double> Complex;
 
@@ -152,7 +152,7 @@ void fft_iter(std::vector<Complex> &x){
     }
 
     for (int len = 2; len <= N; len <<= 1) {
-        std::cout << "len: " << len << std::endl;
+        // std::cout << "len: " << len << std::endl;
         double ang = 2 * M_PI / len;
         Complex wlen(cos(ang), sin(ang));
         for (int i = 0; i < N; i += len) {
@@ -333,12 +333,12 @@ void parallel_fft(std::vector<Complex> &FFT_transformed, std::vector<Complex> &x
 int main() {
     #if TEST == 0 //implement custom code 
 
-    int N = 8;
+    int N = 1 << 23;
 
-    int num_thread = 8;
+    int num_thread = 16;
+
 
     // Complex input[2] = {Complex(1,0), Complex(2,0)};
-    Complex input[8] = {Complex(1,0),Complex(2,0),Complex(3,0),Complex(4,0), Complex(5,0),Complex(6,0),Complex(7,0),Complex(8,0)};
 
     std::vector<Complex> FFT_transformed(N), pFFT_transformed(N);
     
@@ -346,7 +346,7 @@ int main() {
     // Complex FFT_transformed[N], x[N], pFFT_transformed[N];
 
     for (int i=0; i<N; i++){
-        x[i] = input[i];
+        x[i] = Complex(rand()%10, rand()%10);
     }
 
     auto start = std::chrono::steady_clock::now();

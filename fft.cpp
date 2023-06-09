@@ -6,7 +6,7 @@
 #include <thread>
 #include <fstream>
 
-#define TEST 0
+#define TEST 1
 
 typedef std::complex<double> Complex;
 
@@ -55,37 +55,61 @@ unsigned int bit_reversal(unsigned int n, int s){
     return res;
 }
 
-void sequential_fft_iter(std::vector<Complex> &x){ //NOTE: incomplete, need to verify
+void fft_iter(std::vector<Complex> &x){ //NOTE: incomplete, need to verify
     int N = x.size();
     int log2N = log2(N);
     
-    std::vector<Complex> x_res(N); 
-    for (int i = 0; i < N; i++){ // perform bit reversal
-        x_res[i] = x[bit_reversal(i, log2N)]; //order of x_res is now bit reversed
+    // std::vector<Complex> x_res(N); 
+    // for (int i = 0; i < N; i++){ // perform bit reversal
+    //     x_res[i] = x[bit_reversal(i, log2N)]; //order of x_res is now bit reversed
+    // }
+
+    for (int i = 1, j = 0; i < N; i++) {
+        int bit = N >> 1;
+        for (; j & bit; bit >>= 1)
+            j ^= bit;
+        j ^= bit;
+
+        if (i < j)
+            std::swap(x[i], x[j]);
     }
 
-    for (int s = 1; s <= log2N; s++){ // for each recursive stage. 
-        int m =  1 << s; // 2^s. s begins as 2
-        int m2 = m >> 1; // m2 = m/2
-        
-        Complex W (cos(2*M_PI/m), sin(2*M_PI/m));
-
-        for (int i = 0; i < m2; i++){
-            Complex w (1, 0);
-            for (int j = i; j < N; j++){ // butterfly transforms
-                Complex t = w * x_res[i*m + j + m2];
-                Complex u = x_res[i*m + j];
-                x_res[i*m + j] = u + t;
-                x_res[i*m + j + m2] = u - t;
-                w = w * W;
+    for (int len = 2; len <= N; len <<= 1) {
+        double ang = 2 * M_PI / len;
+        Complex wlen(cos(ang), sin(ang));
+        for (int i = 0; i < N; i += len) {
+            Complex W(1);
+            for (int j = 0; j < len / 2; j++) {
+                Complex u = x[i+j];
+                Complex v = x[i+j+len/2] * W;
+                x[i+j] = u + v;
+                x[i+j+len/2] = u - v;
+                W *= wlen;
             }
         }
     }
-    for (int i = 0; i < N; i++){
-        x[i] = x_res[i];
-    }
 }
 
+void inverse_fft(std::vector<Complex> &FFT_inverse, std::vector<Complex>& x, bool recursive) {
+    int N = x.size();
+
+    for (auto &val : x) {val = std::conj(val);}
+
+    if (recursive){
+        fft_rec(FFT_inverse, x, N);
+
+        for (size_t i = 0; i < N; i++) {
+            FFT_inverse[i] = std::conj(FFT_inverse[i])/(Complex)N;
+        }
+    }
+    else {
+        fft_iter(x);
+
+        for (size_t i = 0; i < N; i++) {
+            FFT_inverse[i] = std::conj(x[i])/(Complex)N;
+        }
+    }
+}
 
 void fft_aux(int begin, int end, std::vector<Complex> &FFT_transformed, std::vector<Complex> &x){
     // Aux function for parallel FFT computation
@@ -236,45 +260,77 @@ int main() {
         std::cout << pFFT_transformed[i] << std::endl;
     }
     
+    start = std::chrono::steady_clock::now();
+    sequential_fft_iter(x);
+    // parallel_fft(pFFT_transformed, x, N, num_thread);
+    finish = std::chrono::steady_clock::now();
+    elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    std::cout << "Time for sequential fft is " << elapsed << " microseconds" << std::endl;
+    std::cout << "Sequential FFT result: " << std::endl;
+    for (int i = 0; i < 8; ++i) {
+        std::cout << x[i] << std::endl;
+    }
 
 
     #elif TEST == 1 // Test on weather data
+
+    // Open historical weather data
     std::ifstream inputFile("test_data/weather_data_clean.csv");
     if (!inputFile.is_open()) {
         std::cout << "Failed to open the file." << std::endl;
         return 1;
     }
-    // Put data in a complex array
-    int N = 2284;
-    Complex* numbers = new Complex[N]; //number 
-    int num_frequencies = 15;
+    // Store data in a complex array
+    std::vector<Complex> weather_data, FFT_transformed;
+    int num_frequencies = 100;
 
     std::string line;
-    size_t i = 0;
-    
 
     while (std::getline(inputFile, line)) {
         double number = std::stoi(line);
-        numbers[i] = number;
+        weather_data.push_back(Complex(number, 0));
+        // FFT_transformed.push_back(Complex(number, 0));
     }
 
     inputFile.close();
 
-    Complex* FFT_transformed = new Complex[N];
+    // Print datapoints
+    std::cout << "FFT first 6 data-points: " << std::endl;
+    for (int i = 0; i < 6; ++i) {
+        std::cout << weather_data[i] << std::endl;
+    }
 
-    // std::cout << "Input sequence first 6 numbers: " << std::endl;
-    // for (int i = 0; i < 6; ++i) {
-    //     std::cout << numbers[i] << std::endl;
+    // Compute FFT of weather - sequential (iterative)
+    auto start = std::chrono::steady_clock::now();
+    fft_iter(weather_data);
+    
+
+    // fft_rec(FFT_transformed, weather_data, weather_data.size());
+    // parallel_fft(FFT_transformed, weather_data, weather_data.size(), 4);
+    
+    // Truncate the DFT 
+    // if (FFT_transformed.size() > num_frequencies) { // recursive 
+    //     std::fill(FFT_transformed.begin() + num_frequencies, FFT_transformed.end(), Complex(0, 0)); 
     // }
 
-    // Call algorithm
-    fft_rec(FFT_transformed, numbers, N);
+    if (weather_data.size() > num_frequencies) { // iterative
+        std::fill(weather_data.begin() + num_frequencies, weather_data.end() + 1, 0); 
+    }
+    std::cout << "Done with truncation" << std::endl;
 
-    if (FFT_transformed)
+    // Compute inverse FFT
+    std::vector<Complex> FFT_inverse(weather_data.size());
+    // inverse_fft(FFT_transformed, weather_data, true);
+    inverse_fft(FFT_inverse, weather_data, false);
+
+    std::cout << "Done with IFFT" << std::endl;
 
 
+    auto finish = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(finish - start).count();
+    std::cout << "Time for fft is " << elapsed << " microseconds" << std::endl;
 
-    // Open output file
+    // Create output file
     std::ofstream outputFile("test_data/output_weather_test_simple.csv");
     if (!outputFile.is_open()) {
         std::cout << "Failed to open the file." << std::endl;
@@ -282,7 +338,7 @@ int main() {
     }
 
     // Write the output data to the CSV output file
-    for (const auto& n : numbers) {
+    for (const auto& n : FFT_inverse) {
         outputFile << n << std::endl;
     }
 
@@ -291,14 +347,9 @@ int main() {
     // Print output
     std::cout << "FFT first 6 result: " << std::endl;
     for (int i = 0; i < 6; ++i) {
-        std::cout << numbers[i] << std::endl;
+        std::cout << FFT_inverse[i] << std::endl;
     }
-
-
-
    
     #endif
-    // Open historical weather data
-    
     return 0;
 }

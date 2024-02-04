@@ -6,7 +6,7 @@ Here is the approach:
 1. compute the DFT [x ̃1, . . . , x ̃N ] of the original data;
 2. keep only few largest terms, and make others to be zeroes.
 
-The recommended plan for the project is:
+Tentative plan for the project is:
 
 1. Parallelize DFT:
 (a) implement the standard Cooley-Tukey radix-2 algorithm (see fft1.cpp);

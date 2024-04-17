@@ -18,7 +18,7 @@ Tentative plan for the project is:
 • implement an analogue of Wolfram picture-curves, see5.
 • implement a polynomial multiplication algorithm for polynomials with integer coefficients (so you adapt your DFT from complex number to numbers modulo prime!) and compare with straightforward algorithms, see exercises to Chapter 32 of CLRS (see mult_poly.cpp).
 
-[1] https://doi.org/10.1119/1.3254017  
-[2] http://jeffe.cs.illinois.edu/teaching/algorithms/notes/A-fft.pdf
-[3] https://doi.org/10.1016/0167-8191(90)90031-4
-[4] https://doi.org/10.1109/SUPERC.1994.344263
+[1] https://doi.org/10.1119/1.3254017  <br>
+[2] http://jeffe.cs.illinois.edu/teaching/algorithms/notes/A-fft.pdf <br>
+[3] https://doi.org/10.1016/0167-8191(90)90031-4 <br>
+[4] https://doi.org/10.1109/SUPERC.1994.344263 <br>

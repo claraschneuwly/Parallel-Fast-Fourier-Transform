@@ -1,4 +1,4 @@
-// Standard Cooley-Tukey radix-2 algorithm
+// Standard Cooley-Tukey radix-2 algorithm; Sequential Implementation
 
 #include <iostream>
 #include <complex>

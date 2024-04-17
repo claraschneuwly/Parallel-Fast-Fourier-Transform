@@ -1,3 +1,5 @@
+// Implement polynomial multiplication using the FFT algorithm
+
 #include "fft.cpp"
 #include <iostream>
 #include <complex>

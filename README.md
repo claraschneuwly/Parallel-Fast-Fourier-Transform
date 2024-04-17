@@ -9,7 +9,8 @@ Here is the approach:
 Tentative plan for the project is:
 
 1. Parallelize DFT:
-(a) implement the standard Cooley-Tukey radix-2 algorithm (see sequential_fft.cpp);
+(a) implement the standard Cooley-Tukey radix-2 algorithm (see sequential_fft.cpp); <br>
+
 (b) take historical weather data (or any other data, but periodicity would be great) and test the quality of approximation by the algorithm;
 (c) implement a parallel radix-2 algorithm (following this paper: https://doi.org/10.1016/0167-8191(90)90031-4 and this paper: https://doi.org/10.1109/SUPERC.1994.344263);
 (d) Perform a detailed comparison of the resulting algorithms and their versions on the

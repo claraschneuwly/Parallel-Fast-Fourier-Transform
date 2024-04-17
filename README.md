@@ -14,8 +14,8 @@ Tentative plan for the project is:
 (c) implement a parallel radix-2 algorithm (following paper [3] (see parallel_fft_paper3.cpp) and paper [4] (see parallel_fft_paper4.cpp);<br>
 (d) Perform a detailed comparison of the resulting algorithms and their versions on the weather data and generated benchmarks (test_weather.cpp and test_weather_parallel.cpp).
 
-3. Used the implemented algorithms for some other application of FFT of your choice, and try to parallelize the whole code as much as possible. Potential applications are:
-• implement an analogue of Wolfram picture-curves, see5.
+3. Used the implemented algorithms for some other application of FFT of your choice, and try to parallelize the whole code as much as possible. Potential applications are: <br>
+• implement an analogue of Wolfram picture-curves, see5. <br>
 • implement a polynomial multiplication algorithm for polynomials with integer coefficients (so you adapt your DFT from complex number to numbers modulo prime!) and compare with straightforward algorithms, see exercises to Chapter 32 of CLRS (see mult_poly.cpp).
 
 [1] https://doi.org/10.1119/1.3254017  <br>

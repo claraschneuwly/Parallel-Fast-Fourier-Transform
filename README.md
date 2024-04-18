@@ -23,3 +23,8 @@ Tentative plan for the project is:
 [2] http://jeffe.cs.illinois.edu/teaching/algorithms/notes/A-fft.pdf <br>
 [3] https://doi.org/10.1016/0167-8191(90)90031-4 <br>
 [4] https://doi.org/10.1109/SUPERC.1994.344263 <br>
+
+Contributors:
+- Alejandro CHRISTLIEB
+- Arthur FAILLER
+- Clara SCHNEUWLY

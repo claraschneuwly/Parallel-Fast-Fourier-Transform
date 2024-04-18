@@ -1,4 +1,5 @@
 # Concurrent-Project: Fast Fourier Transform (FFT)
+Course Project for CSE305 - Concurrent and Distributed Computing at Ecole Polytechnique
 
 In this project, the goal will be to implement and then parallelize computation of the discrete Fourier transform (DFT). Although DFT looks “mathish”, it and its variants are at the heart of many important algorithms (ranging from jpeg and mp3 compressions to polynomial and number multiplication)1. For basics on DFT, we refer to the book by Jeff Erickson(1).
 

@@ -9,7 +9,7 @@
 typedef std::complex<double> Complex;
 
 // Compute the DFT of x
-void cooley_tukey(std::vector<Complex>& x) {
+void cooley_tukey(std::vector<Complex>& x) { 
     const size_t N = x.size();
 
     // Trivial size-1 DFT base case
